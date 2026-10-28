@@ -1,20 +1,18 @@
 # Jokoa by JuegAlmi — Backend (Reto 2)
 
-API REST en Symfony 7.4 bajo `/ws`, con MariaDB 11.4, JWT y HTTPS. La consumen la app Android nativa y la app Ionic/Angular.
+API REST en Symfony 7.4 bajo `/ws`, con MariaDB 11.4, JWT y HTTPS. La consumen la app Android nativa, la app Ionic (APK) y la web Angular.
 
 En producción: `https://jokoa.duckdns.org/ws` (AWS Academy, Ubuntu 26.04).
 
 ## Arquitectura (AWS)
 
 ```
-Internet ──► [jokoa-bastion · IP pública · nginx + HTTPS] ──► [jokoa-symfony · 10.0.2.10 · privada]  /ws
-                         │                                └──► [jokoa-ionic   · 10.0.2.11 · privada]  /
+Internet ──► [jokoa-bastion · IP pública · nginx + HTTPS] ──► [jokoa-symfony · 10.0.2.10 · privada]  /ws y /
                          └── SSH de administración (solo desde la IP del administrador) y NAT de la subred privada
 ```
 
 - **Bastión:** única máquina con IP pública. Termina el HTTPS (Let's Encrypt), hace de proxy inverso, de salto SSH y de NAT para que las privadas lleguen a Internet sin IP pública.
-- **Symfony (privada):** nginx (solo HTTP, red privada), PHP-FPM, MariaDB y Adminer (solo en 127.0.0.1) y copias de seguridad.
-- **Ionic (privada):** servirá la web de Ionic compilada.
+- **Symfony (privada):** API y web Angular compilada; nginx (solo HTTP, red privada), PHP-FPM, MariaDB y Adminer (solo en 127.0.0.1) y copias de seguridad.
 - Grupos de seguridad: las privadas solo aceptan SSH y HTTP desde el bastión.
 - **Sin IP elástica** (consume crédito): la IP del bastión cambia al reiniciar el lab y DuckDNS la actualiza solo cada 5 minutos.
 
@@ -45,7 +43,7 @@ terraform init
 terraform apply -var "mi_ip=$(curl -s https://checkip.amazonaws.com)"
 ```
 
-Añade a `~/.ssh/config` los alias `jokoa-bastion` (IP pública del bastión), `jokoa-symfony` (10.0.2.10) y `jokoa-ionic` (10.0.2.11), estos con `ProxyJump jokoa-bastion`, `User ubuntu` y `IdentityFile ~/.ssh/vockey.pem`.
+Añade a `~/.ssh/config` los alias `jokoa-bastion` (IP pública del bastión) y `jokoa-symfony` (10.0.2.10), este con `ProxyJump jokoa-bastion`, `User ubuntu` y `IdentityFile ~/.ssh/vockey.pem`.
 
 **2. Symfony** (`ssh jokoa-symfony`; Docker se instala con el repositorio oficial como en clase):
 

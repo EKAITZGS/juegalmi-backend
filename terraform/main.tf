@@ -1,8 +1,7 @@
-# Jokoa by JuegAlmi: red con un bastión público y dos máquinas privadas (Symfony e Ionic).
+# Jokoa by JuegAlmi: red con un bastión público y una máquina privada (Symfony: API y web Angular).
 #
 #   Internet --> [bastión: IP pública, SSH + proxy 80/443] --> [symfony: 10.0.2.10]
-#                                                          --> [ionic:   10.0.2.11]
-#
+##
 # Las máquinas privadas no tienen IP pública. Salen a Internet (apt, Docker, composer) a través
 # del bastión, que hace de NAT, y solo aceptan SSH y HTTP desde el bastión.
 
@@ -181,22 +180,5 @@ resource "aws_instance" "symfony" {
     volume_type = "gp3"
   }
   tags       = { Name = "jokoa-symfony" }
-  depends_on = [aws_route_table_association.privada]
-}
-
-resource "aws_instance" "ionic" {
-  ami                         = var.ami
-  instance_type               = "t3.micro"
-  key_name                    = var.clave
-  subnet_id                   = aws_subnet.privada.id
-  private_ip                  = "10.0.2.11"
-  associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.privada.id]
-
-  root_block_device {
-    volume_size = 10
-    volume_type = "gp3"
-  }
-  tags       = { Name = "jokoa-ionic" }
   depends_on = [aws_route_table_association.privada]
 }

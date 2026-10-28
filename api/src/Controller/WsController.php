@@ -18,6 +18,7 @@ use App\Repository\MovilRepository;
 use App\Repository\PlataformaRepository;
 use App\Repository\ProductoRepository;
 use App\Repository\TicketRepository;
+use App\Repository\TiendaRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\VideojuegoRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -126,6 +127,25 @@ class WsController extends AbstractController
             $lista[] = [
                 'id' => $departamento->getId(),
                 'nombre' => $departamento->getNombre(),
+            ];
+        }
+
+        return $this->json($lista);
+    }
+
+    #[Route('/tiendas', name: 'ws_tiendas', methods: ['GET'])]
+    public function tiendas(TiendaRepository $tiendaRepository): JsonResponse
+    {
+        $lista = [];
+        foreach ($tiendaRepository->findBy([], ['nombre' => 'ASC']) as $tienda) {
+            $lista[] = [
+                'id' => $tienda->getId(),
+                'nombre' => $tienda->getNombre(),
+                'direccion' => $tienda->getDireccion(),
+                'telefono' => $tienda->getTelefono(),
+                'horario' => $tienda->getHorario(),
+                'latitud' => (float) $tienda->getLatitud(),
+                'longitud' => (float) $tienda->getLongitud(),
             ];
         }
 

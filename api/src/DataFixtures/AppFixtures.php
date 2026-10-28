@@ -11,6 +11,7 @@ use App\Entity\Movil;
 use App\Entity\Plataforma;
 use App\Entity\Producto;
 use App\Entity\Ticket;
+use App\Entity\Tienda;
 use App\Entity\Ubicacion;
 use App\Entity\Usuario;
 use App\Entity\Videojuego;
@@ -35,6 +36,22 @@ class AppFixtures extends Fixture
             $manager->persist($departamentos[$nombre] = (new Departamento())->setNombre($nombre));
         }
 
+        foreach ([
+            ['Jokoa Deusto', 'Av. Lehendakari Aguirre 29, Bilbao', '944 000 101', 'L-S 10:00-21:00', '43.271100', '-2.945900'],
+            ['Jokoa Casco Viejo', 'Calle Somera 12, Bilbao', '944 000 102', 'L-S 10:00-21:30', '43.257000', '-2.923200'],
+            ['Jokoa Barakaldo', 'Plaza Herriko 5, Barakaldo', '944 000 103', 'L-S 10:00-21:00', '43.296700', '-2.989400'],
+            ['Jokoa Getxo', 'Calle Ibaiondo 8, Getxo', '944 000 104', 'L-S 10:00-20:30', '43.349600', '-3.010000'],
+            ['Jokoa Leioa', 'Av. Sarriena 3, Leioa', '944 000 105', 'L-V 10:00-20:00', '43.327300', '-2.976000'],
+        ] as [$nombre, $direccion, $telefono, $horario, $latitud, $longitud]) {
+            $manager->persist((new Tienda())
+                ->setNombre($nombre)
+                ->setDireccion($direccion)
+                ->setTelefono($telefono)
+                ->setHorario($horario)
+                ->setLatitud($latitud)
+                ->setLongitud($longitud));
+        }
+
         $usuarios = [];
         foreach ([
             ['admin@juegalmi.com', 'Admin', 'JuegAlmi', null, ['ROLE_ADMIN']],
@@ -52,6 +69,7 @@ class AppFixtures extends Fixture
         }
 
         $juegos = [];
+        $n = 0; // las portadas están en api/public/img/juegos/<n>.jpg (portadas oficiales y fotos de producto, ids 1-12)
         foreach ([
             ['Mario Kart World', 'Carreras de karts en un mundo abierto, para jugar en familia.', '79.99', 6, 'Nintendo Switch 2', 'Carreras', 3, '3.50'],
             ['Donkey Kong Bananza', 'Plataformas en 3D: destruye el escenario para avanzar.', '69.99', 4, 'Nintendo Switch 2', 'Plataformas', 7, '3.00'],
@@ -63,7 +81,7 @@ class AppFixtures extends Fixture
             ['Hollow Knight: Silksong', 'Aventura de acción en 2D con Hornet como protagonista.', '19.99', 5, 'PC', 'Aventura', 7, '1.00'],
         ] as [$nombre, $descripcion, $precio, $stock, $plataforma, $genero, $pegi, $alquilerDia]) {
             $juegos[$nombre] = (new Videojuego())
-                ->setProducto($this->producto($nombre, $descripcion, $precio, $stock))
+                ->setProducto($this->producto($nombre, $descripcion, $precio, $stock, 'https://jokoa.duckdns.org/img/juegos/'.++$n.'.jpg'))
                 ->setPlataforma($plataformas[$plataforma])
                 ->setGenero($genero)
                 ->setPegi($pegi)
@@ -79,7 +97,7 @@ class AppFixtures extends Fixture
             ['Redmi Note 14 Pro', 'Gama media con cámara de 200 MP y carga rápida.', '349.00', 8, 'Xiaomi', 256, 8],
         ] as [$nombre, $descripcion, $precio, $stock, $marca, $almacenamiento, $ram]) {
             $moviles[$nombre] = (new Movil())
-                ->setProducto($this->producto($nombre, $descripcion, $precio, $stock))
+                ->setProducto($this->producto($nombre, $descripcion, $precio, $stock, 'https://jokoa.duckdns.org/img/juegos/'.++$n.'.jpg'))
                 ->setMarca($marca)
                 ->setAlmacenamientoGb($almacenamiento)
                 ->setRamGb($ram);
@@ -145,14 +163,14 @@ class AppFixtures extends Fixture
         $manager->flush();
     }
 
-    private function producto(string $nombre, string $descripcion, string $precio, int $stock): Producto
+    private function producto(string $nombre, string $descripcion, string $precio, int $stock, ?string $imagen = null): Producto
     {
         return (new Producto())
             ->setNombre($nombre)
             ->setDescripcion($descripcion)
             ->setPrecio($precio)
             ->setStock($stock)
-            ->addImagen((new Imagen())->setUrl('https://placehold.co/600x400/png?text='.urlencode($nombre))->setOrden(1));
+            ->addImagen((new Imagen())->setUrl($imagen ?? 'https://placehold.co/600x400/png?text='.urlencode($nombre))->setOrden(1));
     }
 
     // Guarda el precio del producto en el momento de la compra
