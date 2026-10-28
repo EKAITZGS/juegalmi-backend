@@ -51,6 +51,53 @@ class WsController extends AbstractController
         return $this->json(['resultado' => 'ok', 'id' => $usuario->getId()]);
     }
 
+    // ===================== Perfil del usuario del token =====================
+
+    #[Route('/perfil', name: 'ws_perfil', methods: ['GET'])]
+    public function perfil(): JsonResponse
+    {
+        /** @var Usuario $usuario */
+        $usuario = $this->getUser();
+
+        return $this->json([
+            'id' => $usuario->getId(),
+            'email' => $usuario->getEmail(),
+            'nombre' => $usuario->getNombre(),
+            'apellidos' => $usuario->getApellidos(),
+            'telefono' => $usuario->getTelefono(),
+        ]);
+    }
+
+    #[Route('/perfil/update', name: 'ws_perfil_update', methods: ['PUT'])]
+    public function updatePerfil(Request $request, UsuarioRepository $usuarioRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        /** @var Usuario $usuario */
+        $usuario = $this->getUser();
+        $datos = json_decode($request->getContent(), true) ?? [];
+
+        if (empty($datos['nombre']) || empty($datos['apellidos'])) {
+            return $this->json(['resultado' => 'error', 'mensaje' => 'Nombre y apellidos son obligatorios'], 400);
+        }
+        $usuario->setNombre($datos['nombre']);
+        $usuario->setApellidos($datos['apellidos']);
+        $usuario->setTelefono($datos['telefono'] ?? null);
+
+        // Para cambiar la contraseña hay que dar la actual (por si alguien usa un móvil ajeno)
+        if (!empty($datos['password_nueva'])) {
+            if (empty($datos['password_actual']) || !$passwordHasher->isPasswordValid($usuario, $datos['password_actual'])) {
+                return $this->json(['resultado' => 'error', 'mensaje' => 'La contraseña actual no es correcta'], 403);
+            }
+            if (strlen($datos['password_nueva']) < 6) {
+                return $this->json(['resultado' => 'error', 'mensaje' => 'La contraseña nueva debe tener al menos 6 caracteres'], 400);
+            }
+            $usuario->setPassword($passwordHasher->hashPassword($usuario, $datos['password_nueva']));
+        }
+
+        $usuarioRepository->add($usuario);
+
+        return $this->json(['resultado' => 'ok']);
+    }
+
     // ===================== Plataformas y departamentos =====================
 
     #[Route('/plataformas', name: 'ws_plataformas', methods: ['GET'])]
