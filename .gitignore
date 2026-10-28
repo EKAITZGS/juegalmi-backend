@@ -1,0 +1,4 @@
+# Certificados y su clave privada: se generan en cada servidor (autofirmado o certbot)
+docker/certbot/conf/
+# Copias de la base de datos (datos personales): nunca a Git
+copias/

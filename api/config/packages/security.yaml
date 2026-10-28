@@ -1,0 +1,34 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    # Los usuarios salen de la tabla usuario y se identifican por el email
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\Usuario
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt)
+            security: false
+        # POST /ws/login con email y password: si son correctos, lexik devuelve el token
+        login:
+            pattern: ^/ws/login
+            stateless: true
+            json_login:
+                check_path: /ws/login
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        # El resto de /ws: se identifica por la cabecera Authorization: Bearer <token>
+        api:
+            pattern: ^/ws
+            stateless: true
+            jwt: ~
+
+    access_control:
+        - { path: ^/ws/(login|registro)$, roles: PUBLIC_ACCESS }
+        - { path: ^/ws, roles: IS_AUTHENTICATED_FULLY }
