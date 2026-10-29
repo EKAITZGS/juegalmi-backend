@@ -22,6 +22,7 @@ use App\Repository\TiendaRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\VideojuegoRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -577,8 +578,10 @@ class WsController extends AbstractController
     // ===================== Tickets de soporte =====================
 
     #[Route('/tickets', name: 'ws_tickets', methods: ['GET'])]
-    public function tickets(TicketRepository $ticketRepository): JsonResponse
+    public function tickets(TicketRepository $ticketRepository, EntityManagerInterface $em): JsonResponse
     {
+        // Cuántos mensajes tiene la conversación de cada ticket
+        $conteos = $em->getConnection()->fetchAllKeyValue('SELECT ticket_id, COUNT(*) FROM mensaje_ticket GROUP BY ticket_id');
         if ($this->isGranted('ROLE_ADMIN')) {
             $tickets = $ticketRepository->findBy([], ['fechaApertura' => 'DESC']);
         } else {
@@ -599,6 +602,7 @@ class WsController extends AbstractController
                 'estado' => $ticket->getEstado(),
                 'fecha_apertura' => $ticket->getFechaApertura()->format('Y-m-d H:i'),
                 'fecha_cierre' => $ticket->getFechaCierre()?->format('Y-m-d H:i'),
+                'n_mensajes' => (int) ($conteos[$ticket->getId()] ?? 0),
             ];
         }
 
