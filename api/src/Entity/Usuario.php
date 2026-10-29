@@ -40,6 +40,10 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fechaAlta = null;
 
+    // Un usuario desactivado desde el panel no puede entrar, pero conserva sus pedidos y tickets
+    #[ORM\Column(options: ['default' => true])]
+    private bool $activo = true;
+
     /** @var Collection<int, Compra> */
     #[ORM\OneToMany(targetEntity: Compra::class, mappedBy: 'usuario')]
     private Collection $compras;
@@ -159,6 +163,18 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function isActivo(): bool
+    {
+        return $this->activo;
+    }
+
+    public function setActivo(bool $activo): static
+    {
+        $this->activo = $activo;
 
         return $this;
     }

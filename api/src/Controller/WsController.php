@@ -66,6 +66,7 @@ class WsController extends AbstractController
             'nombre' => $usuario->getNombre(),
             'apellidos' => $usuario->getApellidos(),
             'telefono' => $usuario->getTelefono(),
+            'roles' => $usuario->getRoles(),
         ]);
     }
 
@@ -456,6 +457,7 @@ class WsController extends AbstractController
             $lista[] = [
                 'id' => $compra->getId(),
                 'usuario_id' => $compra->getUsuario()->getId(),
+                'usuario' => $compra->getUsuario()->getEmail(),
                 'fecha' => $compra->getFecha()->format('Y-m-d H:i'),
                 'total' => round($total, 2),
                 'lineas' => $lineas,
@@ -513,6 +515,7 @@ class WsController extends AbstractController
             $lista[] = [
                 'id' => $alquiler->getId(),
                 'usuario_id' => $alquiler->getUsuario()->getId(),
+                'usuario' => $alquiler->getUsuario()->getEmail(),
                 'videojuego_id' => $alquiler->getVideojuego()->getProducto()->getId(),
                 'videojuego' => $alquiler->getVideojuego()->getProducto()->getNombre(),
                 'fecha_inicio' => $alquiler->getFechaInicio()->format('Y-m-d'),
@@ -587,6 +590,7 @@ class WsController extends AbstractController
             $lista[] = [
                 'id' => $ticket->getId(),
                 'usuario_id' => $ticket->getUsuario()->getId(),
+                'usuario' => $ticket->getUsuario()->getEmail(),
                 'departamento_id' => $ticket->getDepartamento()->getId(),
                 'departamento' => $ticket->getDepartamento()->getNombre(),
                 'asunto' => $ticket->getAsunto(),
