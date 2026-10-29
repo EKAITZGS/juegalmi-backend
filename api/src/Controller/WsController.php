@@ -613,6 +613,13 @@ class WsController extends AbstractController
     {
         // Cuántos mensajes tiene la conversación de cada ticket
         $conteos = $em->getConnection()->fetchAllKeyValue('SELECT ticket_id, COUNT(*) FROM mensaje_ticket GROUP BY ticket_id');
+        // Y cuántos de esos mensajes no ha leído todavía el usuario del token (los escritos por otros)
+        $noLeidos = $em->getConnection()->fetchAllKeyValue(
+            'SELECT m.ticket_id, COUNT(*) FROM mensaje_ticket m
+               LEFT JOIN lectura_ticket l ON l.ticket_id = m.ticket_id AND l.usuario_id = :yo
+              WHERE m.usuario_id <> :yo AND m.id > COALESCE(l.ultimo_leido, 0) GROUP BY m.ticket_id',
+            ['yo' => $this->getUser()->getId()],
+        );
         if ($this->isGranted('ROLE_ADMIN')) {
             $tickets = $ticketRepository->findBy([], ['fechaApertura' => 'DESC']);
         } else {
@@ -634,6 +641,7 @@ class WsController extends AbstractController
                 'fecha_apertura' => $ticket->getFechaApertura()->format('Y-m-d H:i'),
                 'fecha_cierre' => $ticket->getFechaCierre()?->format('Y-m-d H:i'),
                 'n_mensajes' => (int) ($conteos[$ticket->getId()] ?? 0),
+                'no_leidos' => (int) ($noLeidos[$ticket->getId()] ?? 0),
             ];
         }
 

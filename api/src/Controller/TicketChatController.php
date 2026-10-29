@@ -12,7 +12,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-// Conversación de un ticket: la ven y escriben su dueño y los administradores
+// Conversación de un ticket: la ven y escriben su dueño y los administradores.
+// Cada usuario tiene su propio "leído hasta aquí" para saber qué mensajes le faltan por ver.
 #[Route('/ws/tickets')]
 class TicketChatController extends AbstractController
 {
@@ -30,6 +31,30 @@ class TicketChatController extends AbstractController
         return $ticket;
     }
 
+    // Mensajes de otros que el usuario aún no ha visto, agrupados por ticket. Un cliente solo cuenta los de sus tickets
+    #[Route('/no-leidos', name: 'ws_tickets_no_leidos', methods: ['GET'])]
+    public function noLeidos(EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Usuario $yo */
+        $yo = $this->getUser();
+        $soloMios = $this->isGranted('ROLE_ADMIN') ? '' : 'AND t.usuario_id = :yo';
+        $filas = $em->getConnection()->fetchAllAssociative(
+            "SELECT t.id, t.asunto, COUNT(*) AS no_leidos
+               FROM mensaje_ticket m
+               JOIN ticket t ON t.id = m.ticket_id
+               LEFT JOIN lectura_ticket l ON l.ticket_id = m.ticket_id AND l.usuario_id = :yo
+              WHERE m.usuario_id <> :yo AND m.id > COALESCE(l.ultimo_leido, 0) $soloMios
+              GROUP BY t.id, t.asunto
+              ORDER BY MAX(m.id) DESC",
+            ['yo' => $yo->getId()],
+        );
+
+        $tickets = array_map(fn (array $f) => ['id' => (int) $f['id'], 'asunto' => $f['asunto'], 'no_leidos' => (int) $f['no_leidos']], $filas);
+
+        return $this->json(['total' => array_sum(array_column($tickets, 'no_leidos')), 'tickets' => $tickets]);
+    }
+
+    // Al abrir la conversación se marcan como leídos todos sus mensajes
     #[Route('/{id}/mensajes', name: 'ws_ticket_mensajes', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function mensajes(int $id, TicketRepository $ticketRepository, EntityManagerInterface $em): JsonResponse
     {
@@ -39,8 +64,10 @@ class TicketChatController extends AbstractController
         }
 
         $lista = [];
+        $ultimo = 0;
         foreach ($em->getRepository(MensajeTicket::class)->findBy(['ticket' => $ticket], ['id' => 'ASC']) as $m) {
             $autor = $m->getUsuario();
+            $ultimo = $m->getId();
             $lista[] = [
                 'id' => $m->getId(),
                 'usuario_id' => $autor->getId(),
@@ -50,6 +77,14 @@ class TicketChatController extends AbstractController
                 'fecha' => $m->getFecha()->format('Y-m-d H:i'),
             ];
         }
+
+        /** @var Usuario $yo */
+        $yo = $this->getUser();
+        $em->getConnection()->executeStatement(
+            'INSERT INTO lectura_ticket (ticket_id, usuario_id, ultimo_leido) VALUES (:t, :u, :m)
+             ON DUPLICATE KEY UPDATE ultimo_leido = GREATEST(ultimo_leido, VALUES(ultimo_leido))',
+            ['t' => $ticket->getId(), 'u' => $yo->getId(), 'm' => $ultimo],
+        );
 
         return $this->json($lista);
     }
