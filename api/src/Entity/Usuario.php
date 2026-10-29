@@ -44,6 +44,20 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $activo = true;
 
+    // Correo verificado. Las cuentas creadas por el administrador y las anteriores a la verificación ya lo están
+    #[ORM\Column(options: ['default' => true])]
+    private bool $verificado = true;
+
+    // Solo se guarda el resumen (SHA-256) del enlace enviado por correo
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $tokenVerificacion = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $verificacionCaduca = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $verificacionEnviada = null;
+
     /** @var Collection<int, Compra> */
     #[ORM\OneToMany(targetEntity: Compra::class, mappedBy: 'usuario')]
     private Collection $compras;
@@ -163,6 +177,54 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function isVerificado(): bool
+    {
+        return $this->verificado;
+    }
+
+    public function setVerificado(bool $verificado): static
+    {
+        $this->verificado = $verificado;
+
+        return $this;
+    }
+
+    public function getTokenVerificacion(): ?string
+    {
+        return $this->tokenVerificacion;
+    }
+
+    public function setTokenVerificacion(?string $token): static
+    {
+        $this->tokenVerificacion = $token;
+
+        return $this;
+    }
+
+    public function getVerificacionCaduca(): ?\DateTimeInterface
+    {
+        return $this->verificacionCaduca;
+    }
+
+    public function setVerificacionCaduca(?\DateTimeInterface $caduca): static
+    {
+        $this->verificacionCaduca = $caduca;
+
+        return $this;
+    }
+
+    public function getVerificacionEnviada(): ?\DateTimeInterface
+    {
+        return $this->verificacionEnviada;
+    }
+
+    public function setVerificacionEnviada(?\DateTimeInterface $enviada): static
+    {
+        $this->verificacionEnviada = $enviada;
 
         return $this;
     }

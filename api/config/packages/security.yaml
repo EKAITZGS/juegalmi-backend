@@ -32,5 +32,5 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/ws/(login|registro)$, roles: PUBLIC_ACCESS }
+        - { path: ^/ws/(login|registro|verificar(/reenviar)?)$, roles: PUBLIC_ACCESS }
         - { path: ^/ws, roles: IS_AUTHENTICATED_FULLY }

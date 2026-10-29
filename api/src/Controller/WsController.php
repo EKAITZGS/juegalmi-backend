@@ -22,7 +22,9 @@ use App\Repository\TiendaRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\VideojuegoRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use App\Service\VerificacionCorreo;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,13 +38,31 @@ class WsController extends AbstractController
     // ===================== Registro (público; el login lo hace lexik en POST /ws/login) =====================
 
     #[Route('/registro', name: 'ws_registro', methods: ['POST'])]
-    public function registro(Request $request, UsuarioRepository $usuarioRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function registro(Request $request, UsuarioRepository $usuarioRepository, UserPasswordHasherInterface $passwordHasher, VerificacionCorreo $verificacion, RateLimiterFactory $registroLimiter): JsonResponse
     {
-        $datos = json_decode($request->getContent(), true);
+        // Freno anti bots: pocas altas por hora desde la misma conexión
+        if (!$registroLimiter->create($request->getClientIp() ?? 'desconocida')->consume()->isAccepted()) {
+            return $this->json(['resultado' => 'error', 'mensaje' => 'Demasiados registros desde tu conexión. Inténtalo más tarde'], 429);
+        }
+
+        $datos = json_decode($request->getContent(), true) ?? [];
+        foreach (['email', 'nombre', 'apellidos', 'password'] as $campo) {
+            if (empty($datos[$campo]) || !is_string($datos[$campo])) {
+                return $this->json(['resultado' => 'error', 'mensaje' => "Falta el campo $campo"], 400);
+            }
+        }
+        if (!filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['resultado' => 'error', 'mensaje' => 'El email no es válido'], 400);
+        }
+        if (strlen($datos['password']) < 6) {
+            return $this->json(['resultado' => 'error', 'mensaje' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+        }
 
         $usuario = new Usuario($datos['email'], $datos['nombre'], $datos['apellidos'], $datos['telefono'] ?? null, ['ROLE_USER']);
         // Se guarda el hash de la contraseña, nunca la contraseña
         $usuario->setPassword($passwordHasher->hashPassword($usuario, $datos['password']));
+        // Con la verificación activa, la cuenta no entra hasta abrir el enlace del correo
+        $usuario->setVerificado(!$verificacion->activa());
 
         try {
             $usuarioRepository->add($usuario);
@@ -50,7 +70,18 @@ class WsController extends AbstractController
             return $this->json(['resultado' => 'error', 'mensaje' => 'Ya existe un usuario con ese email'], 409);
         }
 
-        return $this->json(['resultado' => 'ok', 'id' => $usuario->getId()]);
+        if ($verificacion->activa()) {
+            try {
+                $verificacion->enviar($usuario);
+            } catch (\Throwable) {
+                // Sin correo no hay forma de verificar: se deshace el alta para que pueda repetirla
+                $usuarioRepository->remove($usuario);
+
+                return $this->json(['resultado' => 'error', 'mensaje' => 'No se pudo enviar el correo de verificación. Inténtalo más tarde'], 503);
+            }
+        }
+
+        return $this->json(['resultado' => 'ok', 'id' => $usuario->getId(), 'verificacion' => $verificacion->activa()]);
     }
 
     // ===================== Perfil del usuario del token =====================

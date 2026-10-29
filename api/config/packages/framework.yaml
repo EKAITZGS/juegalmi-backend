@@ -5,6 +5,21 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Detrás del bastión: la IP real del cliente llega en X-Forwarded-For (hace falta para limitar intentos)
+    trusted_proxies: 'REMOTE_ADDR'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
+    # Frenos anti bots: pocas altas por hora desde la misma conexión y pocos reenvíos del correo
+    rate_limiter:
+        registro:
+            policy: sliding_window
+            limit: 8
+            interval: '1 hour'
+        reenvio:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+
     #esi: true
     #fragments: true
 
