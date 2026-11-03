@@ -19,6 +19,10 @@ framework:
             policy: sliding_window
             limit: 10
             interval: '1 hour'
+        asistente:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
 
     #esi: true
     #fragments: true

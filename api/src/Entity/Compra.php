@@ -23,6 +23,11 @@ class Compra
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fecha = null;
 
+    // Tienda donde el cliente recoge el pedido (null en compras antiguas)
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Tienda $tienda = null;
+
     /** @var Collection<int, LineaCompra> */
     #[ORM\OneToMany(targetEntity: LineaCompra::class, mappedBy: 'compra', cascade: ['persist'], orphanRemoval: true)]
     private Collection $lineas;
@@ -59,6 +64,18 @@ class Compra
     public function setUsuario(?Usuario $usuario): static
     {
         $this->usuario = $usuario;
+
+        return $this;
+    }
+
+    public function getTienda(): ?Tienda
+    {
+        return $this->tienda;
+    }
+
+    public function setTienda(?Tienda $tienda): static
+    {
+        $this->tienda = $tienda;
 
         return $this;
     }

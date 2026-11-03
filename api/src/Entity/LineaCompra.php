@@ -29,6 +29,31 @@ class LineaCompra
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $precioUnitario = null;
 
+    // Garantía ampliada opcional (solo móviles): meses y precio por unidad en el momento de la compra
+    #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    private ?int $garantiaMeses = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, options: ['default' => '0.00'])]
+    private string $precioGarantia = '0.00';
+
+    public function getGarantiaMeses(): ?int
+    {
+        return $this->garantiaMeses;
+    }
+
+    public function getPrecioGarantia(): string
+    {
+        return $this->precioGarantia;
+    }
+
+    public function setGarantia(?int $meses, string $precio): static
+    {
+        $this->garantiaMeses = $meses;
+        $this->precioGarantia = $precio;
+
+        return $this;
+    }
+
     public function __construct(?Producto $producto = null, ?int $cantidad = null, ?string $precioUnitario = null)
     {
         $this->producto = $producto;

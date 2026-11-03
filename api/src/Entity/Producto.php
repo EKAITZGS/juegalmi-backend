@@ -31,6 +31,10 @@ class Producto
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fechaAlta = null;
 
+    // Datos libres para recomendar (subgénero, duración, pantalla, batería...); los lee el asistente
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $caracteristicas = null;
+
     /** @var Collection<int, Imagen> */
     #[ORM\OneToMany(targetEntity: Imagen::class, mappedBy: 'producto', cascade: ['persist'], orphanRemoval: true)]
     #[ORM\OrderBy(['orden' => 'ASC'])]
@@ -100,6 +104,18 @@ class Producto
     public function setStock(int $stock): static
     {
         $this->stock = $stock;
+
+        return $this;
+    }
+
+    public function getCaracteristicas(): ?array
+    {
+        return $this->caracteristicas;
+    }
+
+    public function setCaracteristicas(?array $caracteristicas): static
+    {
+        $this->caracteristicas = $caracteristicas;
 
         return $this;
     }
