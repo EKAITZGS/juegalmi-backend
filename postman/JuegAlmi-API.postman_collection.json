@@ -2,7 +2,7 @@
   "info": {
     "name": "JuegAlmi API (/ws) con JWT",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "API REST del Reto 2 JuegAlmi. Ejecuta primero la carpeta '0. Autenticación': los logins guardan el token de Ane (cliente) y el del admin en variables, y el resto de peticiones los usan como Bearer. Cambia base_url para la VM (https://192.168.56.10/ws) o para AWS (por defecto, jokoa.duckdns.org con certificado de Let's Encrypt). Cada petición comprueba su código HTTP: se pueden lanzar todas en orden con el Runner. Contraseña de las cuentas de demo: demo1234. En la VM el certificado es autofirmado: añade juegalmi-vm.crt en Postman → Settings → Certificates → CA certificates."
+    "description": "API REST del Reto 2 JuegAlmi. Ejecuta primero la carpeta '0. Autenticación': los logins guardan el token de Ane (cliente) y el del admin en variables, y el resto de peticiones los usan como Bearer. Cambia base_url para la VM (https://192.168.56.10/ws) o para AWS (por defecto, jokoa.duckdns.org con certificado de Let's Encrypt). Cada petición comprueba su código HTTP: se pueden lanzar todas en orden con el Runner. Contraseña de las cuentas de demo: demo1234; si cambias la del administrador, ponla en la variable password_admin. En la VM el certificado es autofirmado: añade juegalmi-vm.crt en Postman → Settings → Certificates → CA certificates."
   },
   "variable": [
     {
@@ -32,6 +32,18 @@
     {
       "key": "ticket_id",
       "value": ""
+    },
+    {
+      "key": "articulo_id",
+      "value": ""
+    },
+    {
+      "key": "compra_id",
+      "value": ""
+    },
+    {
+      "key": "password_admin",
+      "value": "demo1234"
     }
   ],
   "item": [
@@ -149,7 +161,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@juegalmi.com\",\n  \"password\": \"demo1234\"\n}",
+              "raw": "{\n  \"email\": \"admin@juegalmi.com\",\n  \"password\": \"{{password_admin}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1409,6 +1421,1072 @@
           "request": {
             "method": "DELETE",
             "url": "{{base_url}}/tickets/delete/{{ticket_id}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Artículos (ordenadores, tablets, gaming)",
+      "item": [
+        {
+          "name": "Listado de artículos",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/articulos",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un cliente intenta dar de alta (403)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/articulos/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Portátil Demo 15\",\n  \"descripcion\": \"Portátil de prueba para la colección.\",\n  \"categoria\": \"portatil\",\n  \"marca\": \"Acer\",\n  \"precio\": 599,\n  \"stock\": 4,\n  \"montaje\": 0,\n  \"imagen\": \"https://placehold.co/600x400/png?text=Portatil+Demo\",\n  \"caracteristicas\": {\n    \"procesador\": \"Ryzen 5\",\n    \"ram_gb\": 16\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alta (admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/articulos/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Portátil Demo 15\",\n  \"descripcion\": \"Portátil de prueba para la colección.\",\n  \"categoria\": \"portatil\",\n  \"marca\": \"Acer\",\n  \"precio\": 599,\n  \"stock\": 4,\n  \"montaje\": 0,\n  \"imagen\": \"https://placehold.co/600x400/png?text=Portatil+Demo\",\n  \"caracteristicas\": {\n    \"procesador\": \"Ryzen 5\",\n    \"ram_gb\": 16\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('articulo_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alta con categoría no válida (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/articulos/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Portátil Demo 15\",\n  \"descripcion\": \"Portátil de prueba para la colección.\",\n  \"categoria\": \"nave\",\n  \"marca\": \"Acer\",\n  \"precio\": 599,\n  \"stock\": 4,\n  \"montaje\": 0,\n  \"imagen\": \"https://placehold.co/600x400/png?text=Portatil+Demo\",\n  \"caracteristicas\": {\n    \"procesador\": \"Ryzen 5\",\n    \"ram_gb\": 16\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar el nuevo",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/articulos/{{articulo_id}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar (admin, todos los campos)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/articulos/update/{{articulo_id}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Portátil Demo 15\",\n  \"descripcion\": \"Portátil de prueba para la colección.\",\n  \"categoria\": \"portatil\",\n  \"marca\": \"Acer\",\n  \"precio\": 549,\n  \"stock\": 3,\n  \"montaje\": 0,\n  \"imagen\": \"https://placehold.co/600x400/png?text=Portatil+Demo\",\n  \"caracteristicas\": {\n    \"procesador\": \"Ryzen 5\",\n    \"ram_gb\": 16\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Baja (admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/articulos/delete/{{articulo_id}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar tras borrar (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/articulos/{{articulo_id}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Favoritos",
+      "item": [
+        {
+          "name": "Marcar un producto",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/favoritos/12",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis favoritos (lista de ids)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/favoritos",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quitar el favorito",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/favoritos/12",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Favorito de un producto que no existe (404)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/favoritos/99999",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Recoger en tienda y factura",
+      "item": [
+        {
+          "name": "Tiendas",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/tiendas",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar eligiendo tienda de recogida",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/compras/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lineas\": [\n    {\n      \"producto_id\": 12,\n      \"cantidad\": 1\n    }\n  ],\n  \"tienda_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('compra_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar con una tienda que no existe (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/compras/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lineas\": [\n    {\n      \"producto_id\": 12,\n      \"cantidad\": 1\n    }\n  ],\n  \"tienda_id\": 99999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Factura en PDF de mi compra",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/compras/{{compra_id}}/factura",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Factura de una compra que no existe (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/compras/99999/factura",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10. Reparaciones y chat de tickets",
+      "item": [
+        {
+          "name": "Abrir ticket de reparación (Ane)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/tickets/add",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departamento_id\": 1,\n  \"asunto\": \"No carga la batería\",\n  \"descripcion\": \"Se queda en el 1 %.\",\n  \"dispositivo\": \"iPhone 15\",\n  \"tipo\": \"reparacion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('ticket_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aceptar un presupuesto que no existe (409)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/tickets/presupuesto/{{ticket_id}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aceptado\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mensaje del cliente en el ticket",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/tickets/{{ticket_id}}/mensajes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"¿Cuándo lo podéis mirar?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mensaje vacío (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/tickets/{{ticket_id}}/mensajes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Respuesta del administrador",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/tickets/{{ticket_id}}/mensajes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Mañana por la mañana.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conversación del ticket",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/tickets/{{ticket_id}}/mensajes",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mensajes sin leer",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/tickets/no-leidos",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Borrar el ticket de prueba (admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/tickets/delete/{{ticket_id}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11. Perfil y administración",
+      "item": [
+        {
+          "name": "Mi perfil",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/perfil",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar el perfil sin nombre (400)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/perfil/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"apellidos\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resumen del panel (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/resumen",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un cliente pide el resumen (403)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/resumen",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lista de usuarios (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/usuarios",
             "header": [],
             "auth": {
               "type": "bearer",

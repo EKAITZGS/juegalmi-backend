@@ -1,6 +1,20 @@
 # Jokoa by JuegAlmi — Backend (Reto 2)
 
-API REST en Symfony 7.4 bajo `/ws`, con MariaDB 11.4, JWT y HTTPS. La consumen la app Android nativa, la app Ionic (APK) y la web Angular.
+API REST en Symfony 7.4 bajo `/ws`, con MariaDB 11.4, JWT y HTTPS. La consumen la app Android nativa, la app Ionic (APK) y la web React.
+
+## Qué hace la tienda
+
+Venta y alquiler de videojuegos y venta de móviles, ordenadores, tablets y gaming, en tiendas de Bizkaia.
+
+- **Catálogo:** videojuegos, móviles y artículos (portátiles, sobremesa, PC gaming, tablets, consolas y periféricos), con ficha técnica, buscador, orden y filtro de stock.
+- **Compra:** garantía ampliada por unidad, elección de tienda de recogida y factura en PDF de cada compra. Alquiler de videojuegos por días.
+- **Cuenta:** registro con verificación por correo, perfil, favoritos y comparador de 2 o 3 productos.
+- **Soporte:** tickets de soporte y de reparación (con presupuesto que el cliente acepta o rechaza) y chat entre cliente y administrador con contador de mensajes sin leer.
+- **Asesor de compra** con IA (`POST /ws/asistente`).
+- **Administración (web):** resumen, usuarios, tiendas, fotos, altas y bajas de videojuegos, móviles y artículos, y tickets.
+- **Modo oscuro** en web (sigue al sistema, con botón en el menú), Android e Ionic.
+
+Rutas nuevas desde la primera entrega: `/articulos`, `/favoritos`, `/compras/{id}/factura`, `compra.tienda_id` en `/compras/add`, `/tickets/{id}/mensajes`, `/tickets/no-leidos`, `/tickets/presupuesto/{id}`, `/verificar` y `/asistente`. Todas están en la colección de Postman.
 
 En producción: `https://jokoa.duckdns.org/ws` (AWS Academy, Ubuntu 26.04).
 
@@ -26,7 +40,9 @@ Internet ──► [jokoa-bastion · IP pública · nginx + HTTPS] ──► [jo
 | `db/` | MariaDB + Adminer, scripts de contraseñas, copias y restauración |
 | `docker/` | Dockerfile de PHP-FPM, nginx de la máquina privada |
 | `duckdns/` | Actualización automática de la IP del dominio |
-| `postman/` | Colección de Postman (39 peticiones) y comprobador |
+| `postman/` | Colección de Postman (69 peticiones, 12 carpetas) y comprobador |
+| `docs/` | Diagrama E-R (`er.py` genera `modelo-er.html`; el PNG se saca con Chrome) y créditos de imágenes |
+| `bitacora/` | Registro de todos los pasos del montaje (`web/log.jsonl`) |
 | `docker-compose.yml` | PHP-FPM + nginx de la máquina privada |
 
 ## Secretos (nunca en Git)
@@ -71,17 +87,27 @@ sudo docker compose exec -e APP_ENV=dev php php bin/console doctrine:fixtures:lo
 
 Con `APP_ENV=prod`, cualquier cambio de código requiere `php bin/console cache:clear`.
 
+**Correo de verificación (opcional):** `ssh -t jokoa-symfony "~/juegalmi/db/configurar-correo.sh"` pide servidor SMTP (Gmail con contraseña de aplicación de 16 letras, Brevo u otro), manda un correo de prueba y, si llega, activa `VERIFICAR_EMAIL=1`. La clave queda en `api/.env.prod.local` (permisos 600, fuera de Git). Sin esto, las cuentas nuevas entran sin verificar.
+
+**Asesor con IA (opcional):** `db/configurar-asistente.sh` guarda su clave en el mismo fichero.
+
 ## Copias de seguridad
 
 `db/copia.sh` se lanza cada hora por cron en `jokoa-symfony` (rotación de 7 días). `db/restaurar.sh <copia>` restaura. `db/descargar-copias.ps1` baja las copias al PC (copia fuera de AWS).
 
 ## Cuentas de demostración
 
-`admin@juegalmi.com`, `ane@juegalmi.com` y `jon@juegalmi.com`, todas con la contraseña `demo1234` (solo datos de ejemplo).
+`admin@juegalmi.com`, `ane@juegalmi.com` y `jon@juegalmi.com`, todas con la contraseña `demo1234` al cargar los datos de ejemplo. **En producción cambia la del administrador** (la web es pública) con `ssh -t jokoa-symfony "~/juegalmi/db/cambiar-admin.sh"`, y para las pruebas de Postman usa `JOKOA_ADMIN_PASSWORD=... python postman/probar.py`. Cada ejecución de Postman registra un cliente nuevo (`cliente<número>@juegalmi.com`): desactívalos con `UPDATE usuario SET activo=0 WHERE email LIKE 'cliente%@juegalmi.com'`.
+
+## Seguridad
+
+- `api/.env` (en Git) no lleva secretos: la frase del JWT, el correo y la clave del asesor viven en `api/.env.local` / `api/.env.prod.local` de cada máquina.
+- `db/rotar-jwt.sh` genera una frase y un par de claves JWT nuevos (cierra todas las sesiones). `db/cambiar-admin.sh` cambia una contraseña sin mostrarla.
+- Las cuentas desactivadas (`usuario.activo = 0`) no pueden iniciar sesión.
 
 ## Probar la API
 
-Importa `postman/JuegAlmi-API.postman_collection.json` y lanza el Runner, o ejecuta `python postman/probar.py`. Resultado esperado: 39/39.
+Importa `postman/JuegAlmi-API.postman_collection.json` y lanza el Runner, o ejecuta `python postman/probar.py`. Resultado esperado: 69/69. Las pruebas crean y borran datos de ejemplo (compras, tickets, artículos) en la base a la que apuntan; las compras de prueba de Ane quedan, así que conviene ejecutarla sobre datos de demostración.
 
 ## Cuidado con el crédito
 
