@@ -22,6 +22,7 @@ USUARIO=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.arg
 
 escribir() {  # $1 = 0/1: verificación desactivada/activada
   umask 077
+  local IA; IA=$(grep '^ASISTENTE_' "$ARCHIVO" 2>/dev/null || true)   # la configuración del asesor de IA se conserva
   cat > "$ARCHIVO" <<ENV
 # Correo para la verificación de cuentas. NO subir a Git.
 MAILER_DSN="smtp://${USUARIO}:${CLAVE}@${SERVIDOR}:587"
@@ -29,13 +30,14 @@ MAIL_REMITENTE=$CORREO
 VERIFICAR_EMAIL=$1
 APP_URL=https://jokoa.duckdns.org
 ENV
+  [ -z "$IA" ] || echo "$IA" >> "$ARCHIVO"
   sudo docker compose exec -T php php bin/console cache:clear >/dev/null </dev/null
 }
 
 echo "== Enviando un correo de prueba a $CORREO"
 escribir 0
 if ! sudo docker compose exec -T php php bin/console app:correo-prueba "$CORREO" </dev/null; then
-  rm -f "$ARCHIVO"
+  sed -i '/^ASISTENTE_/!d' "$ARCHIVO"; [ -s "$ARCHIVO" ] || rm -f "$ARCHIVO"
   sudo docker compose exec -T php php bin/console cache:clear >/dev/null </dev/null
   echo "No se pudo enviar. Revisa el servidor, el usuario y la clave."
   exit 1
