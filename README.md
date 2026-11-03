@@ -1,4 +1,4 @@
-# Jokoa by JuegAlmi — Backend (Reto 2)
+# Jokoa — Backend (Reto 2)
 
 API REST en Symfony 7.4 bajo `/ws`, con MariaDB 11.4, JWT y HTTPS. La consumen la app Android nativa, la app Ionic (APK) y la web React.
 

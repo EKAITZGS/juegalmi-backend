@@ -53,7 +53,7 @@ class VerificacionCorreo
             ->from(new Address($this->remitente, 'Jokoa'))
             ->to($u->getEmail())
             ->subject('Verifica tu cuenta de Jokoa')
-            ->text("Hola {$u->getNombre()},\n\nPara activar tu cuenta de Jokoa abre este enlace (caduca en 24 horas):\n$enlace\n\nSi no has creado la cuenta, ignora este mensaje.\n\nJokoa by JuegAlmi")
+            ->text("Hola {$u->getNombre()},\n\nPara activar tu cuenta de Jokoa abre este enlace (caduca en 24 horas):\n$enlace\n\nSi no has creado la cuenta, ignora este mensaje.\n\nJokoa")
             ->html(<<<HTML
 <div style="margin:0;padding:24px;background:#f4f7fb;font-family:Roboto,Arial,sans-serif;color:#1b2430">
   <div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #d5deea;border-radius:16px;overflow:hidden">
