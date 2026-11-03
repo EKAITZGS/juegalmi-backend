@@ -97,7 +97,7 @@ Con `APP_ENV=prod`, cualquier cambio de código requiere `php bin/console cache:
 
 ## Cuentas de demostración
 
-`admin@juegalmi.com`, `ane@juegalmi.com` y `jon@juegalmi.com`, todas con la contraseña `demo1234` al cargar los datos de ejemplo. **En producción cambia la del administrador** (la web es pública) con `ssh -t jokoa-symfony "~/juegalmi/db/cambiar-admin.sh"`, y para las pruebas de Postman usa `JOKOA_ADMIN_PASSWORD=... python postman/probar.py`. Cada ejecución de Postman registra un cliente nuevo (`cliente<número>@juegalmi.com`): desactívalos con `UPDATE usuario SET activo=0 WHERE email LIKE 'cliente%@juegalmi.com'`.
+**En producción** solo existen tres cuentas: `ekaitz@jokoa.com` (administrador), `almi@gmail.com` y `sergio@gmail.com` (clientes, con una compra y un alquiler cada uno). Las contraseñas no se guardan en el repositorio; cámbialas con `ssh -t jokoa-symfony "~/juegalmi/db/cambiar-admin.sh [correo]"`. Los datos de ejemplo de `AppFixtures` (`admin@juegalmi.com`, `ane@juegalmi.com`, `jon@juegalmi.com`, contraseña `demo1234`) solo se cargan en un entorno nuevo. La colección de Postman usa las cuentas de producción: `JOKOA_PASSWORD=... JOKOA_ADMIN_PASSWORD=... python postman/probar.py` (o las variables `password` y `password_admin` en Postman). Cada ejecución de Postman registra un cliente nuevo (`cliente<número>@juegalmi.com`): desactívalos con `UPDATE usuario SET activo=0 WHERE email LIKE 'cliente%@juegalmi.com'`.
 
 ## Seguridad
 

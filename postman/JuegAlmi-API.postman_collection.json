@@ -2,7 +2,7 @@
   "info": {
     "name": "JuegAlmi API (/ws) con JWT",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "API REST del Reto 2 JuegAlmi. Ejecuta primero la carpeta '0. Autenticación': los logins guardan el token de Ane (cliente) y el del admin en variables, y el resto de peticiones los usan como Bearer. Cambia base_url para la VM (https://192.168.56.10/ws) o para AWS (por defecto, jokoa.duckdns.org con certificado de Let's Encrypt). Cada petición comprueba su código HTTP: se pueden lanzar todas en orden con el Runner. Contraseña de las cuentas de demo: demo1234; si cambias la del administrador, ponla en la variable password_admin. En la VM el certificado es autofirmado: añade juegalmi-vm.crt en Postman → Settings → Certificates → CA certificates."
+    "description": "API REST del Reto 2 JuegAlmi. Ejecuta primero la carpeta '0. Autenticación': los logins guardan el token de Almi (cliente) y el del admin en variables, y el resto de peticiones los usan como Bearer. Cambia base_url para la VM (https://192.168.56.10/ws) o para AWS (por defecto, jokoa.duckdns.org con certificado de Let's Encrypt). Cada petición comprueba su código HTTP: se pueden lanzar todas en orden con el Runner. Cuentas de producción: almi@gmail.com (cliente) y ekaitz@jokoa.com (administrador); pon sus contraseñas en las variables password y password_admin. En la VM el certificado es autofirmado: añade juegalmi-vm.crt en Postman → Settings → Certificates → CA certificates."
   },
   "variable": [
     {
@@ -42,8 +42,12 @@
       "value": ""
     },
     {
+      "key": "password",
+      "value": ""
+    },
+    {
       "key": "password_admin",
-      "value": "demo1234"
+      "value": ""
     }
   ],
   "item": [
@@ -88,7 +92,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"ane@juegalmi.com\",\n  \"password\": \"mala\"\n}",
+              "raw": "{\n  \"email\": \"almi@gmail.com\",\n  \"password\": \"mala\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -109,7 +113,7 @@
           ]
         },
         {
-          "name": "Login de Ane (cliente)",
+          "name": "Login de Almi (cliente)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/login",
@@ -124,7 +128,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"ane@juegalmi.com\",\n  \"password\": \"demo1234\"\n}",
+              "raw": "{\n  \"email\": \"almi@gmail.com\",\n  \"password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -161,7 +165,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@juegalmi.com\",\n  \"password\": \"{{password_admin}}\"\n}",
+              "raw": "{\n  \"email\": \"ekaitz@jokoa.com\",\n  \"password\": \"{{password_admin}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -782,7 +786,7 @@
           "name": "Borrar un móvil ya vendido (409)",
           "request": {
             "method": "DELETE",
-            "url": "{{base_url}}/moviles/delete/11",
+            "url": "{{base_url}}/moviles/delete/10",
             "header": [],
             "auth": {
               "type": "bearer",
@@ -813,7 +817,7 @@
       "name": "4. Compras",
       "item": [
         {
-          "name": "Comprar (Ane, con ubicación)",
+          "name": "Comprar (Almi, con ubicación)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/compras/add",
@@ -950,7 +954,7 @@
           ]
         },
         {
-          "name": "Mis compras (Ane: solo las suyas)",
+          "name": "Mis compras (Almi: solo las suyas)",
           "request": {
             "method": "GET",
             "url": "{{base_url}}/compras",
@@ -1013,7 +1017,7 @@
       "name": "5. Alquileres",
       "item": [
         {
-          "name": "Alquilar (Ane, con ubicación)",
+          "name": "Alquilar (Almi, con ubicación)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/alquileres/add",
@@ -1152,10 +1156,10 @@
           ]
         },
         {
-          "name": "Devolver un alquiler de Jon (403)",
+          "name": "Devolver un alquiler de Sergio (403)",
           "request": {
             "method": "PUT",
-            "url": "{{base_url}}/alquileres/devolver/2",
+            "url": "{{base_url}}/alquileres/devolver/12",
             "header": [],
             "auth": {
               "type": "bearer",
@@ -1229,7 +1233,7 @@
       "name": "6. Tickets de soporte",
       "item": [
         {
-          "name": "Abrir ticket (Ane)",
+          "name": "Abrir ticket (Almi)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/tickets/add",
@@ -2045,7 +2049,7 @@
       "name": "10. Reparaciones y chat de tickets",
       "item": [
         {
-          "name": "Abrir ticket de reparación (Ane)",
+          "name": "Abrir ticket de reparación (Almi)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/tickets/add",

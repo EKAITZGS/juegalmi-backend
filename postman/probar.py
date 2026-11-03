@@ -16,8 +16,9 @@ cert = pathlib.Path(__file__).with_name("juegalmi-vm.crt")
 var = {v["key"]: v["value"] for v in c["variable"]}
 if len(sys.argv) > 1:
     var["base_url"] = sys.argv[1]
-# Con la clave del administrador cambiada: JOKOA_ADMIN_PASSWORD=... python postman/probar.py
-var["password_admin"] = os.environ.get("JOKOA_ADMIN_PASSWORD", var["password_admin"])
+# Contraseñas: JOKOA_PASSWORD=... [JOKOA_ADMIN_PASSWORD=...] python postman/probar.py
+var["password"] = os.environ.get("JOKOA_PASSWORD", "")
+var["password_admin"] = os.environ.get("JOKOA_ADMIN_PASSWORD", var["password"])
 # El certificado autofirmado solo se usa con la VM; en AWS el de Let's Encrypt ya lo reconoce el sistema
 contexto = ssl.create_default_context(cafile=str(cert) if cert.exists() and "192.168.56" in var["base_url"] else None)
 
