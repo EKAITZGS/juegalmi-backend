@@ -47,14 +47,22 @@ class VerificacionCorreo
         $this->usuarios->add($u);
 
         $enlace = rtrim($this->urlBase, '/').'/verificar?email='.urlencode($u->getEmail()).'&token='.$token;
-        $nombre = htmlspecialchars((string) $u->getNombre(), ENT_QUOTES);
 
         $correo = (new Email())
             ->from(new Address($this->remitente, 'Jokoa'))
             ->to($u->getEmail())
             ->subject('Verifica tu cuenta de Jokoa')
             ->text("Hola {$u->getNombre()},\n\nPara activar tu cuenta de Jokoa abre este enlace (caduca en 24 horas):\n$enlace\n\nSi no has creado la cuenta, ignora este mensaje.\n\nJokoa")
-            ->html(<<<HTML
+            ->html(self::html((string) $u->getNombre(), $enlace));
+        $this->mailer->send($correo);
+    }
+
+    // Cuerpo HTML del correo con el logo y los colores de la web (tablas, para que lo respeten los clientes de correo)
+    public static function html(string $nombre, string $enlace): string
+    {
+        $nombre = htmlspecialchars($nombre, ENT_QUOTES);
+
+        return <<<HTML
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Activa tu cuenta de Jokoa con un solo clic. El enlace caduca en 24 horas.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eaf2fa;padding:28px 12px;font-family:Roboto,Helvetica,Arial,sans-serif;color:#1b2430">
  <tr><td align="center">
@@ -92,8 +100,7 @@ class VerificacionCorreo
   </table>
  </td></tr>
 </table>
-HTML);
-        $this->mailer->send($correo);
+HTML;
     }
 
     // Devuelve 'ok', 'caducado' o 'invalido'

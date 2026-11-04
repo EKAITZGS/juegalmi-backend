@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Service\VerificacionCorreo;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,6 +20,7 @@ class CorreoPruebaCommand extends Command
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(MAIL_REMITENTE)%')] private string $remitente,
+        #[Autowire('%env(APP_URL)%')] private string $urlBase,
     ) {
         parent::__construct();
     }
@@ -36,6 +38,7 @@ class CorreoPruebaCommand extends Command
                 ->to((string) $input->getArgument('destino'))
                 ->subject('Prueba de correo de Jokoa')
                 ->text('Si lees esto, Jokoa ya puede enviar correos de verificación.')
+                ->html(VerificacionCorreo::html('Jokoa', $this->urlBase))
         );
         $output->writeln('Correo de prueba enviado.');
 
