@@ -15,7 +15,7 @@ E = {
  'Ticket': (C[0],950,['PK id','FK usuario_id','FK departamento_id','asunto','descripcion','dispositivo','tipo (soporte/reparacion)','estado','presupuesto','presupuesto_aceptado','fecha_apertura','fecha_cierre']),
  'MensajeTicket': (C[1],1250,['PK id','FK ticket_id','FK usuario_id','texto','fecha']),
  'LecturaTicket': (C[1],950,['PK id','FK ticket_id','FK usuario_id','ultimo_leido']),
- 'Usuario': (C[2],950,['PK id','email (único)','password (hash)','nombre','apellidos','telefono','roles (JSON)','activo','verificado','token_verificacion','fecha_alta']),
+ 'Usuario': (C[2],950,['PK id','email (único)','password (hash)','nombre','apellidos','telefono','roles (JSON)','activo','verificado','token_verificacion','verificacion_caduca','verificacion_enviada','fecha_alta']),
  'Ubicacion': (C[3],950,['PK id','FK usuario_id','latitud','longitud','fecha','accion']),
  'Favorito': (C[1],80,['PK id','FK usuario_id','FK producto_id','(usuario, producto) único']),
 }
